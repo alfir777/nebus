@@ -1,0 +1,31 @@
+services:
+
+  nebus-api:
+    build: .
+    container_name: nebus-api
+    hostname: nebus-api
+    restart: always
+    command: sh 'entrypoint.sh'
+    ports:
+      - "8008:8008"
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
+
+  nebus-db:
+    image: postgres:latest
+    container_name: nebus-db
+    hostname: nebus-db
+    restart: always
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
+      POSTGRES_DB: ${POSTGRES_DB:-nebus-db}
+      POSTGRES_USER: ${POSTGRES_USER:-nebus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "${POSTGRES_PORT:-25432}:5432"
+    volumes:
+      - nebus-db:/var/lib/postgresql/data
+
+volumes:
+  nebus-db:
+    driver: local

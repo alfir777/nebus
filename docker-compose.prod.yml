@@ -1,0 +1,47 @@
+services:
+
+  nebus-api:
+    build: .
+    container_name: nebus-api
+    hostname: nebus-api
+    restart: always
+    command: sh 'entrypoint.sh'
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.nebus-rtr.entrypoints=https"
+      - "traefik.http.routers.nebus-rtr.rule=Host(`$APP_CONFIG__RUN__DOMAIN`)"
+      ## Middlewares
+      - "traefik.http.routers.nebus-rtr.middlewares=chain-no-auth@file"
+      ## HTTP Services
+      - "traefik.http.routers.nebus-rtr.service=nebus-svc"
+      - "traefik.http.services.nebus-svc.loadbalancer.server.port=8008"
+      ## Disable from watchtower
+      - "com.centurylinklabs.watchtower.enable=false"
+    networks:
+      - direct_net
+
+  nebus-db:
+    image: postgres:latest
+    container_name: nebus-db
+    hostname: nebus-db
+    restart: always
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
+      POSTGRES_DB: ${POSTGRES_DB:-nebus-db}
+      POSTGRES_USER: ${POSTGRES_USER:-nebus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "${POSTGRES_PORT:-25432}:5432"
+    volumes:
+      - nebus-db:/var/lib/postgresql/data
+
+volumes:
+  nebus-db:
+    driver: local
+
+networks:
+  direct_net:
+    external: true
