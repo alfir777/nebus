@@ -1,0 +1,20 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ 'main' ]
+
+jobs:
+  tests:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create env file
+        run: |
+          touch .env
+          echo APP_CONFIG__RUN__DOMAIN=${{ secrets.DOMAIN }} >> .env
+          echo APP_CONFIG__DB__URL=${{ secrets.DB_URL }} >> .env
+      - name: Run build
+        run: docker compose -f docker-compose.prod.yml build
+      - name: Run deploy
+        run: docker compose -f docker-compose.prod.yml up -d
